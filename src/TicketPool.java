@@ -1,53 +1,45 @@
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class TicketPool {
-
-    private final List<Integer> tickets = Collections.synchronizedList(new ArrayList<>());
+    private final Queue<Ticket> tickets;
     private final int maxTicketCapacity;
-    private final  int totalTickets;
-    private   int totalTicketReleased;
 
-    public TicketPool(int maxTicketCapacity, int totalTickets) {
+
+    public TicketPool(int maxTicketCapacity) {
         this.maxTicketCapacity = maxTicketCapacity;
-        this.totalTickets = totalTickets;
-        this.totalTicketReleased = 0;
+        this.tickets = new LinkedList<>();
     }
 
-    public synchronized void addTickets(int ticketCount) {
-        if (this.totalTicketReleased >= totalTickets) {
-            System.out.println("All tickets have been sold. No more tickets to release.");
-            return;
-        }
-        while (tickets.size() + ticketCount > this.maxTicketCapacity) {
-            System.out.println("Ticket pool is full. Vendor is waiting.");
+    // Synchronized method to add tickets
+    public synchronized void addTickets(Ticket ticket) {
+        while (tickets.size() >= maxTicketCapacity) {
             try {
+                System.out.println("Ticket pool full. Vendor is waiting.");
                 wait();
             } catch (InterruptedException e) {
                 System.out.println("Add tickets interrupted.");
+                return;
             }
         }
-        this.totalTicketReleased += ticketCount;
-        for (int i = 0; i <= ticketCount; i++) {
-            tickets.add(1);
-        }
-        System.out.println("Vendor added " + ticketCount + " tickets to the pool.");
+        this.tickets.add(ticket);
+        System.out.println("Ticket added by " + Thread.currentThread().getName() + " | Total Tickets: " + tickets.size());
         notifyAll();
     }
 
-    public synchronized void removeTickets() {
+    // Synchronized method to remove tickets
+    public synchronized void removeTicket() {
         while (tickets.isEmpty()) {
-            System.out.println("No tickets are available to purchase. Customer is waiting.");
             try {
+                System.out.println("No tickets available. Customer is waiting...");
                 wait();
             } catch (InterruptedException e) {
                 System.out.println("Remove tickets interrupted.");
+                return;
             }
         }
-        tickets.removeFirst();
-        System.out.println("Customer purchased a ticket.");
-        System.out.println("Tickets remaining : " + tickets.size());
+        Ticket ticket = tickets.poll();
+        System.out.println("Ticket bought by " + Thread.currentThread().getName() + " | Remaining Tickets: " + tickets.size());
         notifyAll();
     }
 }

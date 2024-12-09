@@ -1,24 +1,24 @@
-public class Vendor implements Runnable{
-
+public class Vendor implements Runnable {
     private final TicketPool ticketPool;
     private final int ticketReleaseRate;
+    private final int totalTickets;
 
-    public Vendor(TicketPool ticketPool,int ticketReleaseRate){
+    public Vendor(TicketPool ticketPool, int ticketReleaseRate, int totalTickets) {
         this.ticketPool = ticketPool;
         this.ticketReleaseRate = ticketReleaseRate;
+        this.totalTickets = totalTickets;
     }
 
     @Override
     public void run() {
-        while(true){
-            ticketPool.addTickets(ticketReleaseRate);
-            try{
-                Thread.sleep(1000);
-            }catch (InterruptedException e){
-                System.out.println("Vendor thread interrupted.");
-                break;
+        try {
+            for (int i = 1; i <= totalTickets; i++) {
+                Ticket ticket = new Ticket(i);
+                ticketPool.addTickets(ticket);
+                Thread.sleep(ticketReleaseRate);
             }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
-
     }
 }
